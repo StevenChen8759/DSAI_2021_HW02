@@ -9,7 +9,7 @@ import pandas as pd
 from loguru import logger
 
 # User module import
-from utils import dataIO
+from utils import dataIO, visualizer
 
 if __name__ == "__main__":
 
@@ -35,8 +35,10 @@ if __name__ == "__main__":
     logger.debug(f"Training data input csv file    -> ./datasets/{args.training}")
     logger.debug(f"Testing data input csv file     -> ./datasets/{args.testing}")
     logger.debug(f"Model Prediction Outcome Output -> ./output/{args.output}")
-    
-    stockCol = ["Open", "High", "Low", "Close"]
-    stockIn = dataIO.read_csv_to_pandas_df(f"./datasets/{args.training}", stockCol)
 
-    print(stockIn)
+    stockCol = ["Open", "High", "Low", "Close"]
+    stockTrain = dataIO.read_csv_to_pandas_df(f"./datasets/{args.training}", stockCol)
+    stockTest = dataIO.read_csv_to_pandas_df(f"./datasets/{args.testing}", stockCol)
+
+    # visualizer.drawKbar(stockTrain, "train")
+    # visualizer.drawKbar(stockTest, "test")
