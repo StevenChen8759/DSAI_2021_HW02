@@ -1,0 +1,7 @@
+# VSCode Ignored Terms
+.vscode
+
+# Python Ignored Terms
+__pycache__
+
+# User-defined Ignored Terms
