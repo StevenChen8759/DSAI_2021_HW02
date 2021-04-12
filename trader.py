@@ -66,22 +66,32 @@ if __name__ == "__main__":
 
     logger.success("<-----------------------------------Training Phase------------------------------------->")
     logger.info("Train LSTM Model: 1 to 2")
-    
-
-    logger.success("<----------------------------------Inference Phase------------------------------------->")
-    logger.info("Do inference to obtain trend of stock")
-
     lstm_1_2 = stockLSTM.train(stock_tsTrain_1_2, stock_tsValidation_1_2, 1, 2)
 
+    logger.success("<----------------------------------Inference Phase------------------------------------->")
+    logger.info("Do inference to obtain price prediction of stock")
     infresult = stockLSTM.inference(lstm_1_2, stockTest_norm, 1, 2)
-
+ 
+    logger.info("Check rising/falling trend by inference result")
     verifier.trendPerf(stockTest_norm, infresult, 1, 2)
 
+    logger.success("<---------------------------------Postprocessing Phase---------------------------------->")
+    logger.info("Generate trading sequence by inference result")
     trade_sequence = outputStockData.makeTradeSequence(stockTest_norm, infresult)
 
+    logger.info("Check trading sequence is valid or not")
     verifier.statusVerify(trade_sequence)
-    profit = verifier.profitEval(stockTest, trade_sequence)
 
-    logger.info(f"Evaluated Profit: {profit:.2f}")
-
+    logger.info(f"Write trading sequence to {args.output}")
     dataIO.write_trade_sequence(args.output, trade_sequence)
+
+    logger.info("Evaluate profit by output trading sequence")
+    profit = verifier.profitEval(stockTest, trade_sequence)
+    if profit > 0:
+        logger.success(f"Evaluated Profit: {profit:.2f}")
+    elif profit == 0:
+        logger.warning(f"Evaluated Profit: {profit:.2f}")
+    else:
+        logger.error(f"Evaluated Profit: {profit:.2f}")
+
+    

@@ -35,9 +35,8 @@ def trendPerf(ipStock, infresult, iplen=1, oplen=1):
 
     for order in range(oplen):
         rhit, rmiss, fhit, fmiss = 0, 0, 0, 0
-        print(f"Verify Trend of future {order + 1} day(s)...")
+        # print(f"Verify Trend of future {order + 1} day(s)...")
         for i in range(len(infresult) - 1 - order):
-
             op_price = ipStock["Open"][i:i + oplen + 1].reset_index(drop=True)
             
             if op_price[0] <= op_price[order + 1]:      # Rising Price
@@ -62,8 +61,7 @@ def trendPerf(ipStock, infresult, iplen=1, oplen=1):
                     fmiss = fmiss + 1
 
             # print(f", {op_price[0]:.2f} -> {op_price[order + 1]:.2f}({infresult[i][order][0]:.2f}), predicted diff: {diff:.2f}")
-        print(f"Rising Hit: {rhit}, Miss: {rmiss}")
-        print(f"Falling Hit: {fhit}, Miss: {fmiss}")
+        logger.debug(f"Trend of future {order + 1} day(s): Rising Hit: {rhit}, Rising Miss: {rmiss}, Falling Hit: {fhit}, Falling Miss: {fmiss}")
 
 
 @logger.catch
@@ -73,7 +71,7 @@ def profitEval(input_df, mani_sequence):
     cost_record = 0
 
     for iter in range(len(input_df.index) - 1):
-        print(f"[{iter}] {input_df['Open'][iter]} -> {input_df['Open'][iter + 1]}, Stat: {status}, Mani: {mani_sequence[iter]}")
+        # print(f"[{iter}] {input_df['Open'][iter]} -> {input_df['Open'][iter + 1]}, Stat: {status}, Mani: {mani_sequence[iter]}")
         assert(-1 <= status <= 1)
 
         # Buy one stock
@@ -81,23 +79,23 @@ def profitEval(input_df, mani_sequence):
             if status == 0:
                 # Calculate sell hold cost
                 cost_record = input_df["Open"][iter + 1]
-                print(f"Buy Hold 1, cost: {cost_record}")
+                # print(f"Buy Hold 1, cost: {cost_record}")
             elif status == -1:
                 # Calculate sell short profit
                 temp = (cost_record - input_df["Open"][iter + 1])
                 overall_profit = overall_profit + temp
-                print(f"Buy Short 1, profit: {temp:.2f}, acc_profit: {overall_profit:.2f}")
+                logger.debug(f"Buy Short 1, cost: {input_df['Open'][iter + 1]}, gain: {cost_record}, profit: {temp:.2f}, acc_profit: {overall_profit:.2f}")
                 
         elif mani_sequence[iter] == -1:
             if status == 1:
                 # Calculate sell hold profit
                 temp = (input_df["Open"][iter + 1] - cost_record)
                 overall_profit = overall_profit + temp
-                print(f"Sell Hold 1, profit: {temp:.2f}, acc_profit: {overall_profit:.2f}")
+                logger.debug(f"Sell Hold 1, cost: {cost_record}, gain: {input_df['Open'][iter + 1]}, profit: {temp:.2f}, acc_profit: {overall_profit:.2f}")
             elif status == 0:
                 # Calculate sell short cost
                 cost_record = input_df["Open"][iter + 1]
-                print(f"Sell short 1, cost: {cost_record}")
+                # print(f"Sell short 1, cost: {cost_record}")
 
         # Update status
         status = status + mani_sequence[iter]
@@ -107,11 +105,11 @@ def profitEval(input_df, mani_sequence):
         # Calculate sell hold profit
         temp = input_df["Close"][iter + 1] - cost_record
         overall_profit = overall_profit + temp
-        print(f"Final Sell Hold 1, profit: {temp:.2f}, acc_profit: {overall_profit:.2f}")
+        logger.debug(f"Final Sell Hold 1, cost: {cost_record}, gain: {input_df['Close'][iter + 1]}, profit: {temp:.2f}, acc_profit: {overall_profit:.2f}")
     elif status == -1:
         # Calculate sell short profit
         temp = cost_record - input_df["Close"][iter + 1]
         overall_profit = overall_profit + temp
-        print(f"Final Buy Short 1, profit: {temp:.2f}, acc_profit: {overall_profit:.2f}")
+        plogger.debug(f"Final Buy Short 1, cost: {input_df['Close'][iter + 1]}, gain: {cost_record}, profit: {temp:.2f}, acc_profit: {overall_profit:.2f}")
 
     return overall_profit

@@ -36,7 +36,9 @@ def train(stockTrain, stockValidation, iplen=1, oplen=1):
 
     logger.debug("Fitting Model, please wait for a moment...")
     callback = EarlyStopping(monitor="val_loss", patience=25, verbose=1, mode="auto")
-    model.fit(train_in, train_out, epochs=50, batch_size=16, verbose=1, validation_data=stockValidation, callbacks=[callback])
+    fitinfo = model.fit(train_in, train_out, epochs=50, batch_size=16, verbose=0, validation_data=stockValidation, callbacks=[callback])
+    cntEpoch = len(fitinfo.history['val_loss'])
+    logger.debug(f"Final Epoch Count: {cntEpoch}, Training Loss: {fitinfo.history['loss'][cntEpoch - 1]:.4f}, Validation Loss: {fitinfo.history['val_loss'][cntEpoch - 1]:.4f}")
     return model
 
 def inference(model, stockInference, iplen=1, oplen=1):
