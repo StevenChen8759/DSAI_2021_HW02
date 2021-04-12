@@ -26,7 +26,6 @@ def drawKbar(input_df, df_title):
     plt.style.use('ggplot')
 
     # Extracting Data for plotting
-    # TODO: add column name and date information
     ohlc = df_draw.loc[:, ['index', 'Open', 'High', 'Low', 'Close']]
     '''ohlc['Date'] = pd.to_datetime(ohlc['Date'])
     ohlc['Date'] = ohlc['Date'].apply(mpl_dates.date2num)
@@ -51,6 +50,6 @@ def drawKbar(input_df, df_title):
 
     if not os.path.isdir('output'):
         os.mkdir('output')
-    
-    opname = f"./output/cschart_{df_title}_{datetime.now(): %Y-%m-%dT%H-%M-%S}.jpg"
+
+    opname = f"./output/cschart_{df_title}_{datetime.now():%Y-%m-%dT%H-%M-%S}.jpg"
     plt.savefig(opname)

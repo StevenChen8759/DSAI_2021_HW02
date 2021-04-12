@@ -14,4 +14,8 @@ from loguru import logger
 def read_csv_to_pandas_df(filename, colname):
     return pd.read_csv(filename, low_memory=False, names=colname)
 
-
+# Write list sequentially
+def write_trade_sequence(filename, list_seq):
+    with open(filename, "w+") as opfile:
+        for row in list_seq:
+            opfile.write(f"{row}\n")

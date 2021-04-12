@@ -5,11 +5,15 @@
 import argparse
 
 # Python external module import
+import numpy as np
 import pandas as pd
 from loguru import logger
 
 # User module import
-from utils import dataIO, visualizer
+from utils import dataIO, visualizer, verifier
+from dataprocessor import inputStockData, outputStockData
+from predictor import stockLSTM
+
 
 if __name__ == "__main__":
 
@@ -34,11 +38,50 @@ if __name__ == "__main__":
     args = parser.parse_args()
     logger.debug(f"Training data input csv file    -> ./datasets/{args.training}")
     logger.debug(f"Testing data input csv file     -> ./datasets/{args.testing}")
-    logger.debug(f"Model Prediction Outcome Output -> ./output/{args.output}")
+    logger.debug(f"Model Prediction Outcome Output -> ./{args.output}")
 
+    logger.success("<-----------------------------------Data Input Phase----------------------------------->")
     stockCol = ["Open", "High", "Low", "Close"]
+    logger.info("Reading training set data...")
     stockTrain = dataIO.read_csv_to_pandas_df(f"./datasets/{args.training}", stockCol)
+    logger.info("Reading testing set data...")
     stockTest = dataIO.read_csv_to_pandas_df(f"./datasets/{args.testing}", stockCol)
 
     # visualizer.drawKbar(stockTrain, "train")
     # visualizer.drawKbar(stockTest, "test")
+
+    logger.success("<---------------------------------Preprocessing Phase---------------------------------->")
+    normfunc = lambda x: (x - np.mean(x)) / (np.max(x) - np.min(x))
+
+    logger.info("Normalize training set data...")
+    stockTrain_norm = inputStockData.normalize(stockTrain, normfunc)
+    logger.info("Normalize testing set data...")
+    stockTest_norm = inputStockData.normalize(stockTest, normfunc)
+
+    logger.info("Encode Time Series Data - 1 to 2")
+    stockTrain_ts_1_2 = inputStockData.encode_tsdata(stockTrain_norm, 1, 2)
+
+    logger.info("Split training data for training phase...")
+    stock_tsTrain_1_2, stock_tsValidation_1_2 = inputStockData.train_validation_split(stockTrain_ts_1_2, 0.25)
+
+    logger.success("<-----------------------------------Training Phase------------------------------------->")
+    logger.info("Train LSTM Model: 1 to 2")
+    
+
+    logger.success("<----------------------------------Inference Phase------------------------------------->")
+    logger.info("Do inference to obtain trend of stock")
+
+    lstm_1_2 = stockLSTM.train(stock_tsTrain_1_2, stock_tsValidation_1_2, 1, 2)
+
+    infresult = stockLSTM.inference(lstm_1_2, stockTest_norm, 1, 2)
+
+    verifier.trendPerf(stockTest_norm, infresult, 1, 2)
+
+    trade_sequence = outputStockData.makeTradeSequence(stockTest_norm, infresult)
+
+    verifier.statusVerify(trade_sequence)
+    profit = verifier.profitEval(stockTest, trade_sequence)
+
+    logger.info(f"Evaluated Profit: {profit:.2f}")
+
+    dataIO.write_trade_sequence(args.output, trade_sequence)
